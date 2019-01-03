@@ -68,6 +68,7 @@ chmod +x $INSTALLDIR/install.sh
 (cat <<EOF
 #!/bin/sh
 
+demo_type=DIAG
 blk_dev=/dev/vda
 root_disk=hd0
 distro_part=3
@@ -137,7 +138,7 @@ umount \${distro_mnt}/sys
 
 # Install boot loader
 echo "Install GRUB2 bootloader .."
-grub-install --boot-directory="\${distro_mnt}/boot" --recheck "\${blk_dev}" || {
+grub-install --target="i386-pc" --boot-directory="\${distro_mnt}/boot" --recheck --force "\${blk_dev}" || {
         echo "ERROR: grub-install failed on: \${blk_dev}"
         exit 1
 }
@@ -185,6 +186,22 @@ menuentry '${DISTR0_VER}' {
 EOF3
 ) >> \${grub_cfg}
 
+
+# If ONIE supports boot command feeding,
+# adds DEMO DIAG bootcmd to ONIE.
+if grep -q 'ONIE_SUPPORT_BOOTCMD_FEEDING' $onie_root_dir/grub.d/50_onie_grub &&
+    [ "$demo_type" = "DIAG" ] ; then
+    cat <<EOF4 > $onie_root_dir/grub/diag-bootcmd.cfg
+diag_menu="INSPUR $demo_type"
+function diag_bootcmd {
+  set root='(\${root_disk},gpt\${distro_part})'
+  echo    'Loading ${DISTR0_VER} ...'
+  linux   /vmlinuz \${kernel_args} root=\${blk_dev}\${distro_part}
+  echo    'Loading ${DISTR0_VER} initial ramdisk ...'
+  initrd  /initrd.img
+  boot
+}
+EOF4
 
 # Add menu entries for ONIE -- use the grub fragment provided by the
 # ONIE distribution.
