@@ -38,7 +38,7 @@ CHROOT_PKG="${DISTR0_VER}-chroot.tar.bz2"
       echo "Error: yumbootstrap tool not found. Please install yumbootstrap."
       exit 1;
    fi
-   PKG_LIST=openssh-server,grub2
+   PKG_LIST=openssh-server,grub2,grub2-efi,grub2-efi-x64-modules,grub2-efi-x64-cdboot
    /usr/sbin/yumbootstrap --include=${PKG_LIST} --verbose --group=Core ${DISTR0_VER} ${CHROOT_PATH}
    cd ${CHROOT_PATH}
    ln -sf boot/vmlinuz-$(ls -1 lib/modules | tail -1) vmlinuz
